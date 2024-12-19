@@ -18,8 +18,11 @@ async fn chat(req: Request) -> Response {
         Request::Post(str) => {
             let mut cont: Cont =
                 serde_json::from_str(str.as_str()).map_err(|_| StatusCode::BAD_REQUEST)?;
-            cont.messages
-                .push("How would you rate your pain?".to_string());
+
+            let possible = chatbot::query_chat(&cont.messages);
+            let num = chatbot::gen_random_number();
+            let (possible, num) = tokio::join!(possible, num);
+            cont.messages.push(possible[num % 2].clone());
             Ok(Content::Json(
                 serde_json::to_string(&cont).map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?,
             ))
